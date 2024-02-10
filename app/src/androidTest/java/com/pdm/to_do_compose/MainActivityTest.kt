@@ -8,9 +8,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.test.platform.app.InstrumentationRegistry
+import com.pdm.to_do_compose.domain.models.Priority
 import com.pdm.to_do_compose.presentation.todo_list.ToDoListContent
 import com.pdm.to_do_compose.ui.theme.ToDoComposeTheme
 import com.pdm.to_do_compose.util.TestTags
@@ -28,7 +30,7 @@ class MainActivityTest {
     private fun initCompose() {
         composableRuleTest.activity.setContent {
             ToDoComposeTheme {
-                ToDoListContent {
+                ToDoListContent(emptyList(), {}, {}, {}) {
 
                 }
             }
@@ -54,6 +56,21 @@ class MainActivityTest {
             ignoreCase = true, useUnmergedTree = true
         ).assertIsDisplayed()
 
+        composableRuleTest.onNodeWithTag(
+            TestTags.ListScreen.SEARCH_BUTTON_ACTION, true
+        )
+            .assertIsDisplayed()
+
+        composableRuleTest.onNodeWithTag(
+            TestTags.ListScreen.SORT_BUTTON_ACTION, true
+        )
+            .assertIsDisplayed()
+
+        composableRuleTest.onNodeWithTag(
+            TestTags.ListScreen.DELETE_ALL_BUTTON_ACTION, true
+        )
+            .assertIsDisplayed()
+
     }
 
     @Test
@@ -76,6 +93,28 @@ class MainActivityTest {
             ignoreCase = true, useUnmergedTree = true
         ).assertDoesNotExist()
 
+    }
+
+    @Test
+    fun assertDropDownMenuVisibility() {
+        initCompose()
+
+        composableRuleTest.onNodeWithTag(
+            TestTags.ListScreen.SORT_BUTTON_ACTION, true
+        )
+            .assertIsDisplayed().performClick()
+
+        composableRuleTest.onNodeWithText(
+            Priority.LOW.name,
+            true,
+            ignoreCase = false, useUnmergedTree = true
+        ).assertIsDisplayed()
+
+        composableRuleTest.onNodeWithText(
+            Priority.HIGH.name,
+            true,
+            ignoreCase = false, useUnmergedTree = true
+        ).assertIsDisplayed()
     }
 
 }

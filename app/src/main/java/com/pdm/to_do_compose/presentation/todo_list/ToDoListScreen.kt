@@ -7,15 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,9 +25,9 @@ import com.pdm.to_do_compose.domain.models.ToDoTaskModel
 import com.pdm.to_do_compose.util.TestTags.ListScreen.FAB_BUTTON
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.unit.dp
+import com.pdm.to_do_compose.domain.models.Priority
 import com.pdm.to_do_compose.presentation.todo_list.components.DefaultListAppBar
 import com.pdm.to_do_compose.ui.theme.ToDoComposeTheme
-import com.pdm.to_do_compose.util.TestTags.ListScreen.DEFAULT_APP_BAR
 import com.pdm.to_do_compose.util.TestTags.ListScreen.TASKS_LIST
 
 @Composable
@@ -41,19 +36,24 @@ fun ToDoListScreen(
     navigateToTask: (Int) -> Unit
 ) {
     val tasks by viewModel.allTasks.collectAsState()
-    ToDoListContent(tasks, navigateToTask)
+    ToDoListContent(tasks, {}, {}, {}) { taskId ->
+        navigateToTask(taskId)
+    }
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ToDoListContent(
     task: List<ToDoTaskModel> = emptyList(),
+    onSearchClicked: () -> Unit,
+    onPriorityChanged: (Priority) -> Unit,
+    onDeleteAllClicked: () -> Unit,
     onFabClicked: (Int) -> Unit
 ) {
 
     val listState = rememberLazyListState()
-// The FAB is initially expanded. Once the first visible item is past the first item we
-// collapse the FAB. We use a remembered derived state to minimize unnecessary compositions.
+    // The FAB is initially expanded. Once the first visible item is past the first item we
+    // collapse the FAB. We use a remembered derived state to minimize unnecessary compositions.
     val expandedFab by remember {
         derivedStateOf {
             listState.firstVisibleItemIndex == 0
@@ -62,7 +62,13 @@ fun ToDoListContent(
 
     Scaffold(
         topBar = {
-            DefaultListAppBar()
+            DefaultListAppBar({
+                onSearchClicked()
+            }, {
+                onPriorityChanged(it)
+            }) {
+                onDeleteAllClicked()
+            }
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -77,7 +83,11 @@ fun ToDoListContent(
                 text = { Text(text = stringResource(id = R.string.add_new_task)) },
             )
         }) {
-        LazyColumn(state = listState, modifier = Modifier.fillMaxSize().testTag(TASKS_LIST)) {
+        LazyColumn(
+            state = listState, modifier = Modifier
+                .fillMaxSize()
+                .testTag(TASKS_LIST)
+        ) {
             for (index in 0 until 100) {
                 item {
                     Text(
@@ -93,5 +103,13 @@ fun ToDoListContent(
 @Preview(showBackground = true)
 @Composable
 private fun ToDoContentPreview() {
-    ToDoListContent {}
+    ToDoListContent(emptyList(), {}, {}, {}) {}
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ToDoContentDarkModePreview() {
+    ToDoComposeTheme(darkTheme = true) {
+        ToDoListContent(emptyList(), {}, {}, {}) {}
+    }
 }
