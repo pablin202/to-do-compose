@@ -21,6 +21,12 @@
           <timeTargetWasSelectedWithDropDown value="2024-02-08T22:52:51.272786Z" />
         </State>
       </entry>
+      <entry key="deleteAllTasksReturnsTrueById()">
+        <State />
+      </entry>
+      <entry key="deleteTaskReturnsTrueById()">
+        <State />
+      </entry>
       <entry key="insertTaskReturnsTrueById()">
         <State />
       </entry>

@@ -138,9 +138,9 @@ class ToDoDbTest {
 
         toDoDao.addTask(taskOne)
 
-        val latch = CountDownLatch(1)
-
         toDoDao.deleteTask(taskOne)
+
+        val latch = CountDownLatch(1)
 
         val job = async(Dispatchers.IO) {
             toDoDao.getTaskById(1).collect {
@@ -176,9 +176,9 @@ class ToDoDbTest {
         toDoDao.addTask(taskOne)
         toDoDao.addTask(taskTwo)
 
-        val latch = CountDownLatch(1)
-
         toDoDao.deleteAllTasks()
+
+        val latch = CountDownLatch(1)
 
         val job = async(Dispatchers.IO) {
             toDoDao.getAllTask().collect {
