@@ -1,10 +1,7 @@
 package com.pdm.to_do_compose
 
 import android.content.Context
-import androidx.activity.ComponentActivity
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
-import org.junit.Rule
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
@@ -22,7 +19,7 @@ class BaseActivityTest<T : Any> @PublishedApi internal constructor(
 //    @get:Rule
 //    val composableRuleTest = createAndroidComposeRule<T>()
 
-    private val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
+    //private val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
 
     companion object {
         @JvmStatic
