@@ -5,4 +5,13 @@ data class ToDoTaskModel(
     val title: String,
     val description: String,
     val priority: Priority
-)
+) {
+    companion object {
+        val EmptyModel = ToDoTaskModel(
+            -1,
+            "",
+            "",
+            Priority.NONE
+        )
+    }
+}

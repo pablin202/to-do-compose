@@ -12,4 +12,11 @@ object TestTags {
         const val CLOSE_BUTTON_ACTION = "close_button_action"
         const val SEARCH_TEXT_INPUT = "search_text_input"
     }
+
+    object TaskDetailsScreen {
+        const val TASK_DETAILS_APP_BAR = "task_details_app_bar"
+        const val SAVE_BUTTON_ACTION = "save_button_action"
+        const val BACK_BUTTON_ACTION = "back_arrow_button_action"
+        const val DELETE_BUTTON_ACTION= "delete_button_action"
+    }
 }

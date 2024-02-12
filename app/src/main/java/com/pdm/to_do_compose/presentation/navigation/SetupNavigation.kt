@@ -1,5 +1,6 @@
 package com.pdm.to_do_compose.presentation.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
@@ -28,6 +29,7 @@ fun SetupNavigation(
         })) {
             ToDoListScreen {
                 screen.task(it)
+                Log.d("TaskId", it.toString())
             }
         }
 

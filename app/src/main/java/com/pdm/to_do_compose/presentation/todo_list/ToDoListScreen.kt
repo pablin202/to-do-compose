@@ -1,9 +1,12 @@
 package com.pdm.to_do_compose.presentation.todo_list
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -19,9 +22,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.pdm.to_do_compose.R
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.pdm.to_do_compose.domain.models.ToDoTaskModel
 import com.pdm.to_do_compose.util.TestTags.ListScreen.FAB_BUTTON
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.Alignment
 import com.pdm.to_do_compose.domain.models.Priority
 import com.pdm.to_do_compose.presentation.todo_list.components.DefaultListAppBar
 import com.pdm.to_do_compose.presentation.todo_list.components.EmptyContent
@@ -34,11 +37,11 @@ import com.pdm.to_do_compose.util.SearchAppBarState
 fun ToDoListScreen(
     viewModel: ToDoListViewModel = hiltViewModel(), navigateToTask: (Int) -> Unit
 ) {
-    val tasks by viewModel.allTasks.collectAsState()
+    val state by viewModel.uiState.collectAsState()
     val searchAppBarState by viewModel.searchAppBarState
     val searchTextState by viewModel.searchTextState
 
-    ToDoListContent(tasks,
+    ToDoListContent(state,
         searchAppBarState,
         searchTextState,
         { viewModel.showSearchBar() },
@@ -55,7 +58,7 @@ fun ToDoListScreen(
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ToDoListContent(
-    tasks: List<ToDoTaskModel> = emptyList(),
+    state: ToDoTasksUIState,
     searchAppBarState: SearchAppBarState,
     searchTextState: String,
     onOpenSearchBarClicked: () -> Unit,
@@ -104,30 +107,67 @@ fun ToDoListContent(
             text = { Text(text = stringResource(id = R.string.add_new_task)) },
         )
     }) { innerPadding ->
-        if (tasks.isEmpty()) {
-            EmptyContent()
-        } else {
-            ListTasks(
-                tasks = tasks,
-                innerPadding = innerPadding,
-                listState = listState,
-                navigateToTaskScreen = onFabClicked
-            )
+
+        when (state) {
+            is ToDoTasksUIState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            is ToDoTasksUIState.Success -> {
+                if (state.tasks.isEmpty()) {
+                    EmptyContent()
+                } else {
+                    ListTasks(
+                        tasks = state.tasks,
+                        innerPadding = innerPadding,
+                        listState = listState,
+                        navigateToTaskScreen = onFabClicked
+                    )
+                }
+            }
+
+            else -> {
+
+            }
         }
+
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun ToDoContentPreview() {
-    ToDoListContent(emptyList(), SearchAppBarState.CLOSED, "", {}, {}, {}, {}, {}, {}) {}
+    ToDoListContent(
+        ToDoTasksUIState.Success(emptyList()),
+        SearchAppBarState.CLOSED,
+        "",
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}) {}
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun ToDoContentDarkModePreview() {
     ToDoComposeTheme(darkTheme = true) {
-        ToDoListContent(emptyList(), SearchAppBarState.CLOSED, "", {}, {}, {}, {}, {}, {}) {
+        ToDoListContent(
+            ToDoTasksUIState.Success(emptyList()),
+            SearchAppBarState.CLOSED,
+            "",
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}) {
 
         }
     }
