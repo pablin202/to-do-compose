@@ -14,12 +14,24 @@ import androidx.compose.ui.test.swipeUp
 import androidx.test.platform.app.InstrumentationRegistry
 import com.pdm.to_do_compose.domain.models.Priority
 import com.pdm.to_do_compose.presentation.todo_list.ToDoListContent
+import com.pdm.to_do_compose.presentation.todo_list.ToDoListScreen
+import com.pdm.to_do_compose.presentation.todo_list.ToDoListViewModel
 import com.pdm.to_do_compose.ui.theme.ToDoComposeTheme
+import com.pdm.to_do_compose.util.SearchAppBarState
 import com.pdm.to_do_compose.util.TestTags
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.delay
+import org.junit.Before
+import javax.inject.Inject
 
+@HiltAndroidTest
 class MainActivityTest {
 
-    @get:Rule
+    @get:Rule(order = 0)
+    var hiltRule = HiltAndroidRule(this)
+
+    @get:Rule(order = 1)
     val composableRuleTest = createAndroidComposeRule<MainActivity>()
 
     private val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -27,10 +39,15 @@ class MainActivityTest {
     private var fabButtonText = context.resources.getString(R.string.add_new_task)
     private var appBarText = context.resources.getString(R.string.tasks)
 
+    @Before
+    fun setup() {
+        hiltRule.inject()
+    }
+
     private fun initCompose() {
         composableRuleTest.activity.setContent {
             ToDoComposeTheme {
-                ToDoListContent(emptyList(), {}, {}, {}) {
+                ToDoListScreen() {
 
                 }
             }
@@ -47,74 +64,95 @@ class MainActivityTest {
     @Test
     fun assertDefaultAppBarIsDisplayed() {
         initCompose()
-        composableRuleTest.onNodeWithTag(TestTags.ListScreen.DEFAULT_APP_BAR, true)
-            .assertIsDisplayed()
 
-        composableRuleTest.onNodeWithText(
-            appBarText,
-            true,
-            ignoreCase = true, useUnmergedTree = true
-        ).assertIsDisplayed()
+        with(composableRuleTest) {
+            onNodeWithTag(TestTags.ListScreen.DEFAULT_APP_BAR, true)
+                .assertIsDisplayed()
 
-        composableRuleTest.onNodeWithTag(
-            TestTags.ListScreen.SEARCH_BUTTON_ACTION, true
-        )
-            .assertIsDisplayed()
+            onNodeWithText(
+                appBarText,
+                true,
+                ignoreCase = true, useUnmergedTree = true
+            ).assertIsDisplayed()
 
-        composableRuleTest.onNodeWithTag(
-            TestTags.ListScreen.SORT_BUTTON_ACTION, true
-        )
-            .assertIsDisplayed()
+            onNodeWithTag(
+                TestTags.ListScreen.SEARCH_BUTTON_ACTION, true
+            )
+                .assertIsDisplayed()
 
-        composableRuleTest.onNodeWithTag(
-            TestTags.ListScreen.DELETE_ALL_BUTTON_ACTION, true
-        )
-            .assertIsDisplayed()
+            onNodeWithTag(
+                TestTags.ListScreen.SORT_BUTTON_ACTION, true
+            )
+                .assertIsDisplayed()
 
+            onNodeWithTag(
+                TestTags.ListScreen.DELETE_ALL_BUTTON_ACTION, true
+            )
+                .assertIsDisplayed()
+        }
     }
 
     @Test
     fun hideFabButtonTextAfterScroll() {
         initCompose()
 
-        composableRuleTest.onNodeWithText(
-            fabButtonText,
-            true,
-            ignoreCase = true, useUnmergedTree = true
-        ).assertIsDisplayed()
+        with(composableRuleTest) {
+            onNodeWithText(
+                fabButtonText,
+                true,
+                ignoreCase = true, useUnmergedTree = true
+            ).assertIsDisplayed()
 
-        composableRuleTest.onNodeWithTag(TestTags.ListScreen.TASKS_LIST, true)
-            .assertIsDisplayed()
-            .performTouchInput { swipeUp() }
+            onNodeWithTag(TestTags.ListScreen.TASKS_LIST, true)
+                .assertIsDisplayed()
+                .performTouchInput { swipeUp() }
 
-        composableRuleTest.onNodeWithText(
-            fabButtonText,
-            true,
-            ignoreCase = true, useUnmergedTree = true
-        ).assertDoesNotExist()
-
+            onNodeWithText(
+                fabButtonText,
+                true,
+                ignoreCase = true, useUnmergedTree = true
+            ).assertDoesNotExist()
+        }
     }
 
     @Test
     fun assertDropDownMenuVisibility() {
         initCompose()
 
-        composableRuleTest.onNodeWithTag(
-            TestTags.ListScreen.SORT_BUTTON_ACTION, true
-        )
-            .assertIsDisplayed().performClick()
+        with(composableRuleTest) {
+            onNodeWithTag(
+                TestTags.ListScreen.SORT_BUTTON_ACTION, true
+            )
+                .assertIsDisplayed().performClick()
 
-        composableRuleTest.onNodeWithText(
-            Priority.LOW.name,
-            true,
-            ignoreCase = false, useUnmergedTree = true
-        ).assertIsDisplayed()
+            onNodeWithText(
+                Priority.LOW.name,
+                true,
+                ignoreCase = false, useUnmergedTree = true
+            ).assertIsDisplayed()
 
-        composableRuleTest.onNodeWithText(
-            Priority.HIGH.name,
-            true,
-            ignoreCase = false, useUnmergedTree = true
-        ).assertIsDisplayed()
+            onNodeWithText(
+                Priority.HIGH.name,
+                true,
+                ignoreCase = false, useUnmergedTree = true
+            ).assertIsDisplayed()
+        }
     }
 
+    @Test
+    fun assertSearchVisibilityIsShown() {
+        initCompose()
+
+        with(composableRuleTest) {
+            onNodeWithTag(
+                TestTags.ListScreen.SEARCH_BUTTON_ACTION, true
+            )
+                .assertIsDisplayed().performClick()
+
+            onNodeWithTag(
+                TestTags.ListScreen.SEARCH_APP_BAR,
+                useUnmergedTree = true
+            ).assertIsDisplayed()
+        }
+    }
 }

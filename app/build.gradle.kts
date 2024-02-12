@@ -16,8 +16,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.pdm.to_do_compose.CustomTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -88,6 +87,11 @@ dependencies {
     // hilt
     implementation("com.google.dagger:hilt-android:2.50")
     kapt("com.google.dagger:hilt-android-compiler:2.50")
+
+    // For instrumented tests.
+    androidTestImplementation("com.google.dagger:hilt-android-testing:2.50")
+    // ...with Kotlin.
+    kaptAndroidTest("com.google.dagger:hilt-android-compiler:2.50")
 
     androidTestImplementation("com.google.truth:truth:1.1.5")
     testImplementation("app.cash.turbine:turbine:1.0.0")

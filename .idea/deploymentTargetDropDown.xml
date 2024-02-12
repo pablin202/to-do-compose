@@ -27,7 +27,7 @@
       <entry key="assertDropDownMenuVisibility()">
         <State />
       </entry>
-      <entry key="deleteAllTasksReturnsTrueById()">
+      <entry key="assertSearchVisibilityIsShown()">
         <State />
       </entry>
       <entry key="hideFabButtonTextAfterScroll()">

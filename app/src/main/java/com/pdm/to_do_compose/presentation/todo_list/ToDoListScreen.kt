@@ -7,10 +7,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,10 +26,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.pdm.to_do_compose.domain.models.ToDoTaskModel
 import com.pdm.to_do_compose.util.TestTags.ListScreen.FAB_BUTTON
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.pdm.to_do_compose.domain.models.Priority
 import com.pdm.to_do_compose.presentation.todo_list.components.DefaultListAppBar
+import com.pdm.to_do_compose.presentation.todo_list.components.SearchAppBar
 import com.pdm.to_do_compose.ui.theme.ToDoComposeTheme
+import com.pdm.to_do_compose.util.SearchAppBarState
 import com.pdm.to_do_compose.util.TestTags.ListScreen.TASKS_LIST
 
 @Composable
@@ -36,20 +41,39 @@ fun ToDoListScreen(
     navigateToTask: (Int) -> Unit
 ) {
     val tasks by viewModel.allTasks.collectAsState()
-    ToDoListContent(tasks, {}, {}, {}) { taskId ->
+    val searchAppBarState by viewModel.searchAppBarState
+    val searchTextState by viewModel.searchTextState
+
+    ToDoListContent(tasks,
+        searchAppBarState,
+        searchTextState,
+        { viewModel.showSearchBar() },
+        { viewModel.changePriority(it) },
+        { viewModel.deleteAllTask() },
+        { viewModel.searchTextChange(it) },
+        { viewModel.closeSearchBar() },
+        { viewModel.searchByText(it) }) { taskId ->
         navigateToTask(taskId)
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ToDoListContent(
     task: List<ToDoTaskModel> = emptyList(),
-    onSearchClicked: () -> Unit,
+    searchAppBarState: SearchAppBarState,
+    searchTextState: String,
+    onOpenSearchBarClicked: () -> Unit,
     onPriorityChanged: (Priority) -> Unit,
     onDeleteAllClicked: () -> Unit,
+    onTextChange: (String) -> Unit,
+    onCloseClicked: () -> Unit,
+    onSearchClicked: (String) -> Unit,
     onFabClicked: (Int) -> Unit
 ) {
+
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     val listState = rememberLazyListState()
     // The FAB is initially expanded. Once the first visible item is past the first item we
@@ -61,14 +85,23 @@ fun ToDoListContent(
     }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            DefaultListAppBar({
-                onSearchClicked()
-            }, {
-                onPriorityChanged(it)
-            }) {
-                onDeleteAllClicked()
+            if (searchAppBarState == SearchAppBarState.CLOSED) {
+                DefaultListAppBar(scrollBehavior = scrollBehavior, {
+                    onOpenSearchBarClicked()
+                }, {
+                    onPriorityChanged(it)
+                }) {
+                    onDeleteAllClicked()
+                }
+            } else {
+                SearchAppBar(text = searchTextState,
+                    onTextChange = { onTextChange(it) },
+                    onCloseClicked = { onCloseClicked() },
+                    onSearchClicked = { onSearchClicked(it) })
             }
+
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -103,13 +136,26 @@ fun ToDoListContent(
 @Preview(showBackground = true)
 @Composable
 private fun ToDoContentPreview() {
-    ToDoListContent(emptyList(), {}, {}, {}) {}
+    ToDoListContent(emptyList(), SearchAppBarState.CLOSED,
+        "", {}, {}, {}, {},
+        {},
+        {}) {}
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun ToDoContentDarkModePreview() {
     ToDoComposeTheme(darkTheme = true) {
-        ToDoListContent(emptyList(), {}, {}, {}) {}
+        ToDoListContent(emptyList(),
+            SearchAppBarState.CLOSED,
+            "",
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}) {
+
+        }
     }
 }
