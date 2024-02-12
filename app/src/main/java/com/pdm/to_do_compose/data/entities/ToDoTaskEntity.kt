@@ -8,7 +8,7 @@ import com.pdm.to_do_compose.util.Constants.DATABASE_TABLE
 @Entity(tableName = DATABASE_TABLE)
 data class ToDoTaskEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Int,
     val title: String,
     val description: String,
     val priority: Priority

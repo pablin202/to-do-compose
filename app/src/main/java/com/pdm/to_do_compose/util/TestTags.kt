@@ -9,6 +9,7 @@ object TestTags {
         const val SEARCH_BUTTON_ACTION = "search_button_action"
         const val SORT_BUTTON_ACTION = "sort_button_action"
         const val DELETE_ALL_BUTTON_ACTION = "delete_all_button_action"
-
+        const val CLOSE_BUTTON_ACTION = "close_button_action"
+        const val SEARCH_TEXT_INPUT = "search_text_input"
     }
 }

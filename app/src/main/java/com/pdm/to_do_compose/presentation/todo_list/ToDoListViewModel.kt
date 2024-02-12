@@ -1,6 +1,7 @@
 package com.pdm.to_do_compose.presentation.todo_list
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,17 +20,25 @@ class ToDoListViewModel @Inject constructor(
     private val toDoRepository: ToDoRepository
 ) : ViewModel() {
 
-    val searchAppBarState: MutableState<SearchAppBarState> =
+    private val _searchAppBarState: MutableState<SearchAppBarState> =
         mutableStateOf(SearchAppBarState.CLOSED)
 
-    val searchTextState: MutableState<String> =
-        mutableStateOf("")
+    private val _searchTextState: MutableState<String> = mutableStateOf("")
 
     private val _allTask = MutableStateFlow<List<ToDoTaskModel>>(emptyList())
 
+    val searchAppBarState: State<SearchAppBarState> =
+        _searchAppBarState
+
+    val searchTextState: MutableState<String> = _searchTextState
+
     val allTasks: StateFlow<List<ToDoTaskModel>> = _allTask
 
-    fun getAllTask() {
+    init {
+        getAllTask()
+    }
+
+    private fun getAllTask() {
         viewModelScope.launch {
             toDoRepository.getAllTask.collect {
                 _allTask.value = it
@@ -38,15 +47,42 @@ class ToDoListViewModel @Inject constructor(
     }
 
     fun searchByText(text: String) {
-
+        viewModelScope.launch {
+            toDoRepository.searchTasks(text).collect {
+                _allTask.value = it
+            }
+        }
     }
 
     fun deleteAllTask() {
-
+        viewModelScope.launch {
+            toDoRepository.deleteAllTasks()
+            _allTask.value = emptyList()
+        }
     }
 
     fun changePriority(priority: Priority) {
+        when (priority) {
+            Priority.LOW -> {
+                viewModelScope.launch {
+                    toDoRepository.sortByLowPriority.collect {
+                        _allTask.value = it
+                    }
+                }
+            }
 
+            Priority.HIGH -> {
+                viewModelScope.launch {
+                    toDoRepository.sortByHighPriority.collect {
+                        _allTask.value = it
+                    }
+                }
+            }
+
+            else -> {
+                getAllTask()
+            }
+        }
     }
 
     fun searchTextChange(text: String) {
@@ -54,12 +90,12 @@ class ToDoListViewModel @Inject constructor(
     }
 
     fun showSearchBar() {
-        searchAppBarState.value = SearchAppBarState.OPENED
+        _searchAppBarState.value = SearchAppBarState.OPENED
     }
 
     fun closeSearchBar() {
         if (searchTextState.value.isEmpty()) {
-            searchAppBarState.value = SearchAppBarState.CLOSED
+            _searchAppBarState.value = SearchAppBarState.CLOSED
         } else {
             searchTextChange("")
         }

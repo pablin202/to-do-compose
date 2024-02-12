@@ -24,7 +24,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,22 +48,22 @@ import com.pdm.to_do_compose.ui.theme.TOP_APP_BAR_HEIGHT
 import com.pdm.to_do_compose.ui.theme.ToDoComposeTheme
 import com.pdm.to_do_compose.ui.theme.Typography
 import com.pdm.to_do_compose.util.TestTags
+import com.pdm.to_do_compose.util.TestTags.ListScreen.CLOSE_BUTTON_ACTION
 import com.pdm.to_do_compose.util.TestTags.ListScreen.DELETE_ALL_BUTTON_ACTION
 import com.pdm.to_do_compose.util.TestTags.ListScreen.SEARCH_APP_BAR
 import com.pdm.to_do_compose.util.TestTags.ListScreen.SEARCH_BUTTON_ACTION
+import com.pdm.to_do_compose.util.TestTags.ListScreen.SEARCH_TEXT_INPUT
 import com.pdm.to_do_compose.util.TestTags.ListScreen.SORT_BUTTON_ACTION
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DefaultListAppBar(
-    scrollBehavior: TopAppBarScrollBehavior,
     onOpenSearchBarClicked: () -> Unit,
     onPriorityChanged: (Priority) -> Unit,
     onDeleteAllClicked: () -> Unit
 ) {
     TopAppBar(
         modifier = Modifier.testTag(TestTags.ListScreen.DEFAULT_APP_BAR),
-        scrollBehavior = scrollBehavior,
         title = { Text(text = stringResource(id = R.string.tasks)) },
         colors = TopAppBarDefaults.mediumTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primary,
@@ -193,7 +192,9 @@ fun SearchAppBar(
         color = MaterialTheme.colorScheme.primary
     ) {
         TextField(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(SEARCH_TEXT_INPUT),
             value = text,
             onValueChange = { onTextChange(it) },
             placeholder = {
@@ -220,7 +221,10 @@ fun SearchAppBar(
                 }
             },
             trailingIcon = {
-                IconButton(onClick = { onCloseClicked() }) {
+                IconButton(
+                    onClick = { onCloseClicked() },
+                    modifier = Modifier.testTag(CLOSE_BUTTON_ACTION)
+                ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = stringResource(id = R.string.close_icon),
@@ -250,7 +254,7 @@ fun SearchAppBar(
 @Preview
 @Composable
 private fun DefaultListAppBarPreview() {
-    DefaultListAppBar(TopAppBarDefaults.pinnedScrollBehavior(), {}, {}) {
+    DefaultListAppBar({}, {}) {
 
     }
 }
@@ -260,7 +264,7 @@ private fun DefaultListAppBarPreview() {
 @Composable
 private fun DefaultListAppBarDarkModePreview() {
     ToDoComposeTheme(darkTheme = true) {
-        DefaultListAppBar(TopAppBarDefaults.pinnedScrollBehavior(), {}, {}) {
+        DefaultListAppBar({}, {}) {
 
         }
     }
