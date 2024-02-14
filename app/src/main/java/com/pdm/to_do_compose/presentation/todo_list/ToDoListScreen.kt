@@ -11,8 +11,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -24,14 +27,19 @@ import com.pdm.to_do_compose.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pdm.to_do_compose.util.TestTags.ListScreen.FAB_BUTTON
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import com.pdm.to_do_compose.domain.models.Priority
+import com.pdm.to_do_compose.presentation.todo_details.UiTaskEvent
 import com.pdm.to_do_compose.presentation.todo_list.components.DefaultListAppBar
 import com.pdm.to_do_compose.presentation.todo_list.components.EmptyContent
 import com.pdm.to_do_compose.presentation.todo_list.components.ListTasks
 import com.pdm.to_do_compose.presentation.todo_list.components.SearchAppBar
 import com.pdm.to_do_compose.ui.theme.ToDoComposeTheme
 import com.pdm.to_do_compose.util.SearchAppBarState
+import kotlinx.coroutines.launch
 
 @Composable
 fun ToDoListScreen(
@@ -41,32 +49,53 @@ fun ToDoListScreen(
     val searchAppBarState by viewModel.searchAppBarState
     val searchTextState by viewModel.searchTextState
 
+    val context = LocalContext.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(key1 = keyboardController) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiTaskListEvent.ShowSnackbar -> {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            event.value.asString(context)
+                        )
+                        keyboardController?.hide()
+                    }
+                }
+            }
+        }
+    }
+
     ToDoListContent(state,
         searchAppBarState,
         searchTextState,
+        snackbarHostState,
         { viewModel.showSearchBar() },
         { viewModel.changePriority(it) },
         { viewModel.deleteAllTask() },
         { viewModel.searchTextChange(it) },
         { viewModel.closeSearchBar() },
-        { viewModel.searchByText(it) }) { taskId ->
+        { viewModel.searchByText() }) { taskId ->
         navigateToTask(taskId)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ToDoListContent(
     state: ToDoTasksUIState,
     searchAppBarState: SearchAppBarState,
     searchTextState: String,
+    snackbarHostState: SnackbarHostState,
     onOpenSearchBarClicked: () -> Unit,
     onPriorityChanged: (Priority) -> Unit,
     onDeleteAllClicked: () -> Unit,
     onTextChange: (String) -> Unit,
     onCloseClicked: () -> Unit,
-    onSearchClicked: (String) -> Unit,
+    onSearchClicked: () -> Unit,
     onFabClicked: (Int) -> Unit
 ) {
     val listState = rememberLazyListState()
@@ -78,7 +107,9 @@ fun ToDoListContent(
         }
     }
 
-    Scaffold(topBar = {
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
         if (searchAppBarState == SearchAppBarState.CLOSED) {
             DefaultListAppBar({
                 onOpenSearchBarClicked()
@@ -91,7 +122,7 @@ fun ToDoListContent(
             SearchAppBar(text = searchTextState,
                 onTextChange = { onTextChange(it) },
                 onCloseClicked = { onCloseClicked() },
-                onSearchClicked = { onSearchClicked(it) })
+                onSearchClicked = { onSearchClicked() })
         }
 
     }, floatingActionButton = {
@@ -146,6 +177,7 @@ private fun ToDoContentPreview() {
         ToDoTasksUIState.Success(emptyList()),
         SearchAppBarState.CLOSED,
         "",
+        SnackbarHostState(),
         {},
         {},
         {},
@@ -162,6 +194,7 @@ private fun ToDoContentDarkModePreview() {
             ToDoTasksUIState.Success(emptyList()),
             SearchAppBarState.CLOSED,
             "",
+            SnackbarHostState(),
             {},
             {},
             {},

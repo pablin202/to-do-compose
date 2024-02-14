@@ -38,6 +38,7 @@ import com.pdm.to_do_compose.ui.theme.LARGE_PADDING
 @Composable
 fun PriorityDropDown(
     priority: Priority,
+    modifier: Modifier,
     onPrioritySelected: (Priority) -> Unit
 ) {
 
@@ -51,15 +52,13 @@ fun PriorityDropDown(
     )
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .height(60.dp)
             .clickable { expanded = true }
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            )
-            .padding(start = LARGE_PADDING),
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Canvas(modifier = Modifier
@@ -114,11 +113,17 @@ fun PriorityDropDown(
 @Preview
 @Composable
 fun PriorityDropDownPreview() {
-    PriorityDropDown(priority = Priority.LOW, onPrioritySelected = {})
+    PriorityDropDown(
+        priority = Priority.LOW,
+        modifier = Modifier.fillMaxWidth(),
+        onPrioritySelected = {})
 }
 
 @Preview
 @Composable
 fun PriorityHighDropDownPreview() {
-    PriorityDropDown(priority = Priority.HIGH, onPrioritySelected = {})
+    PriorityDropDown(
+        priority = Priority.HIGH,
+        modifier = Modifier.fillMaxWidth(),
+        onPrioritySelected = {})
 }

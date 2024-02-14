@@ -182,7 +182,7 @@ fun SearchAppBar(
     text: String,
     onTextChange: (String) -> Unit,
     onCloseClicked: () -> Unit,
-    onSearchClicked: (String) -> Unit
+    onSearchClicked: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -237,7 +237,7 @@ fun SearchAppBar(
             ),
             keyboardActions = KeyboardActions(
                 onSearch = {
-                    onSearchClicked(text)
+                    onSearchClicked()
                 }
             ),
             colors = TextFieldDefaults.colors(

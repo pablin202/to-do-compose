@@ -17,4 +17,11 @@
     <string name="new_task">New Task</string>
     <string name="delete_icon">Delete Icon</string>
     <string name="task">Task</string>
+    <string name="drop_down_arrow_icon">Drop-Down Arrow Icon</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="successfully_deleted_task_message">Task was deleted</string>
+    <string name="successfully_added_task_message">Task added</string>
+    <string name="successfully_saved_task_message">Task saved</string>
+    <string name="empty_task_message">Tasks cannot be empty</string>
 </resources>

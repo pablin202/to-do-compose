@@ -5,6 +5,9 @@
       <entry key="MainActivityTest">
         <State />
       </entry>
+      <entry key="PriorityHighDropDownPreview">
+        <State />
+      </entry>
       <entry key="app">
         <State>
           <targetSelectedWithDropDown>
@@ -28,9 +31,6 @@
         <State />
       </entry>
       <entry key="assertSearchVisibilityIsShown()">
-        <State />
-      </entry>
-      <entry key="hideFabButtonTextAfterScroll()">
         <State />
       </entry>
     </value>
