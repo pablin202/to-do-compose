@@ -148,7 +148,7 @@ class ToDoListViewModel @Inject constructor(
             }
 
             else -> {
-
+                //no-op
             }
         }
     }

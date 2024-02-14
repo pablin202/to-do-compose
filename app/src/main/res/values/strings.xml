@@ -24,4 +24,8 @@
     <string name="successfully_added_task_message">Task added</string>
     <string name="successfully_saved_task_message">Task saved</string>
     <string name="empty_task_message">Tasks cannot be empty</string>
+    <string name="alert_dialog_title">Confirm action</string>
+    <string name="alert_dialog_text">"This action will erase all tasks. Are your sure to proceed? "</string>
+    <string name="confirm">Confirm</string>
+    <string name="dismiss">Dismiss</string>
 </resources>

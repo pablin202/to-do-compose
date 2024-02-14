@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -14,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,6 +30,7 @@ import com.pdm.to_do_compose.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pdm.to_do_compose.util.TestTags.ListScreen.FAB_BUTTON
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
@@ -107,37 +111,77 @@ fun ToDoListContent(
         }
     }
 
+    val showAlertMessage = remember {
+        mutableStateOf(false)
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-        if (searchAppBarState == SearchAppBarState.CLOSED) {
-            DefaultListAppBar({
-                onOpenSearchBarClicked()
-            }, {
-                onPriorityChanged(it)
-            }) {
-                onDeleteAllClicked()
+            if (searchAppBarState == SearchAppBarState.CLOSED) {
+                DefaultListAppBar({
+                    onOpenSearchBarClicked()
+                }, {
+                    onPriorityChanged(it)
+                }) {
+                    showAlertMessage.value = true
+                }
+            } else {
+                SearchAppBar(text = searchTextState,
+                    onTextChange = { onTextChange(it) },
+                    onCloseClicked = { onCloseClicked() },
+                    onSearchClicked = { onSearchClicked() })
             }
-        } else {
-            SearchAppBar(text = searchTextState,
-                onTextChange = { onTextChange(it) },
-                onCloseClicked = { onCloseClicked() },
-                onSearchClicked = { onSearchClicked() })
-        }
 
-    }, floatingActionButton = {
-        ExtendedFloatingActionButton(
-            modifier = Modifier.testTag(FAB_BUTTON),
-            expanded = expandedFab,
-            onClick = { onFabClicked(-1) },
-            icon = {
-                Icon(
-                    Icons.Outlined.Add, stringResource(id = R.string.add_new_task_button),
-                )
-            },
-            text = { Text(text = stringResource(id = R.string.add_new_task)) },
-        )
-    }) { innerPadding ->
+        }, floatingActionButton = {
+            ExtendedFloatingActionButton(
+                modifier = Modifier.testTag(FAB_BUTTON),
+                expanded = expandedFab,
+                onClick = { onFabClicked(-1) },
+                icon = {
+                    Icon(
+                        Icons.Outlined.Add, stringResource(id = R.string.add_new_task_button),
+                    )
+                },
+                text = { Text(text = stringResource(id = R.string.add_new_task)) },
+            )
+        }) { innerPadding ->
+
+        if (showAlertMessage.value) {
+            AlertDialog(onDismissRequest = { showAlertMessage.value = false },
+                icon = {
+                    Icon(
+                        Icons.Filled.DeleteOutline,
+                        contentDescription = stringResource(id = R.string.delete_icon)
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showAlertMessage.value = false
+                            onDeleteAllClicked()
+                        }
+                    ) {
+                        Text(stringResource(id = R.string.confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showAlertMessage.value = false
+                        }
+                    ) {
+                        Text(stringResource(id = R.string.dismiss))
+                    }
+                },
+                title = {
+                    Text(text = stringResource(id = R.string.alert_dialog_title))
+                },
+                text = {
+                    Text(text = stringResource(id = R.string.alert_dialog_text))
+                }
+            )
+        }
 
         when (state) {
             is ToDoTasksUIState.Loading -> {
