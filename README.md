@@ -24,6 +24,19 @@ A simple "To-Do" task application for Android built with Jetpack Compose, Room, 
 - Unit Testing: Utilizing JUnit and Mockito for unit tests.
 - UI Testing: Compose UI testing framework.
 
+## Screenshots
+
+
+### Home Screen
+<img src="https://github.com/pablin202/to-do-compose/assets/8398530/229aa5a8-1e3e-4694-9b60-f3d9faebe031" alt="Home Screen" width="300">
+
+### Add Task Screen
+<img src="https://github.com/pablin202/to-do-compose/assets/8398530/64c9d51a-eb90-4ed1-8df2-5d5c2d5af7e8" alt="Add Task Screen" width="300">
+
+### Tasks Screen
+<img src="https://github.com/pablin202/to-do-compose/assets/8398530/343eee1d-2220-4288-a9cc-98faebdfebae" alt="Task Detail Screen" width="300">
+
+
 ## Getting Started
 
 1. Clone the repository.
