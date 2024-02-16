@@ -64,7 +64,7 @@ class TaskViewModel @Inject constructor(
         _uiState.update {
             _uiState.value.copy(
                 loading = false,
-                toDoTaskModel = _uiState.value.toDoTaskModel?.copy(priority = priority),
+                toDoTaskModel = _uiState.value.toDoTaskModel?.copy(priority = priority.ordinal),
                 error = null
             )
         }

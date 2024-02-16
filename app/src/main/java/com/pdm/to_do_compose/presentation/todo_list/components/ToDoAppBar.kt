@@ -182,7 +182,7 @@ fun SearchAppBar(
     text: String,
     onTextChange: (String) -> Unit,
     onCloseClicked: () -> Unit,
-    onSearchClicked: () -> Unit
+//    onSearchClicked: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -233,13 +233,13 @@ fun SearchAppBar(
                 }
             },
             keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Search
+                imeAction = ImeAction.None
             ),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    onSearchClicked()
-                }
-            ),
+//            keyboardActions = KeyboardActions(
+//                onSearch = {
+//                    onSearchClicked()
+//                }
+//            ),
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = Color.Transparent,
                 focusedContainerColor = Color.Transparent,
@@ -273,7 +273,7 @@ private fun DefaultListAppBarDarkModePreview() {
 @Preview
 @Composable
 private fun SearchAppBarPreview() {
-    SearchAppBar("", {}, {}) {
+    SearchAppBar("", {}) {
 
     }
 }
@@ -282,7 +282,7 @@ private fun SearchAppBarPreview() {
 @Composable
 private fun SearchAppBarDarkModPreview() {
     ToDoComposeTheme(darkTheme = true) {
-        SearchAppBar("", {}, {}) {
+        SearchAppBar("", {}) {
 
         }
     }

@@ -20,104 +20,125 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.pdm.to_do_compose.R
+import com.pdm.to_do_compose.domain.models.ToDoTaskModel
+import com.pdm.to_do_compose.domain.preferences.Preferences
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 class ToDoListViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val toDoRepository: ToDoRepository
+    private val toDoRepository: ToDoRepository,
+    private val preferences: Preferences
 ) : ViewModel() {
 
-    private val action: Action = savedStateHandle.getStateFlow("action", "").value.toAction()
+    private val action: Action =
+        savedStateHandle.getStateFlow("action", "").value.toAction()
 
-    private val _searchAppBarState: MutableState<SearchAppBarState> =
-        mutableStateOf(SearchAppBarState.CLOSED)
+    private val _searchAppBarState =
+        MutableStateFlow(SearchAppBarState.CLOSED)
 
-    private val _searchTextState: MutableState<String> = mutableStateOf("")
+    private val _searchTextState = MutableStateFlow("")
 
-    private val _uiState = MutableStateFlow<ToDoTasksUIState>(ToDoTasksUIState.Idle)
+    private val _sort: MutableStateFlow<Priority> =
+        MutableStateFlow(preferences.loadPriority())
 
-    val searchAppBarState: State<SearchAppBarState> =
-        _searchAppBarState
+    private val _loadingState = MutableStateFlow(false)
 
-    val searchTextState: MutableState<String> = _searchTextState
-
-    val uiState: StateFlow<ToDoTasksUIState> = _uiState
+    private val _error: MutableStateFlow<Throwable?> =
+        MutableStateFlow(null)
 
     private val _uiEvent = Channel<UiTaskListEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
+    private val _taskSelected: MutableState<ToDoTaskModel> =
+        mutableStateOf(ToDoTaskModel.EmptyModel)
+
+    private val _sortTasks = combine(toDoRepository.getAllTask, _sort) { tasks, sort ->
+        changePriority(tasks, sort)
+    }.catch {
+        _error.value = it
+    }
+
+    val uiState: StateFlow<TasksUIState> = combine(
+        _loadingState, _sort, _sortTasks, _searchTextState, _searchAppBarState,
+    ) { isLoading, sort, tasks, text, barState ->
+
+        if (text.isEmpty()) {
+            TasksUIState(
+                loading = isLoading,
+                tasks = tasks,
+                sort = sort,
+                searchAppBarText = text,
+                appBarState = barState,
+            )
+        } else {
+            TasksUIState(
+                loading = isLoading,
+                tasks = tasks.filter {
+                    it.description.contains(_searchTextState.value)
+                            || it.title.contains(_searchTextState.value)
+                },
+                sort = sort,
+                searchAppBarText = text,
+                appBarState = barState,
+            )
+        }
+
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = TasksUIState(loading = true)
+    )
+
     init {
-        getAllTask()
         showMessageAfterAction()
-    }
-
-    private fun getAllTask() {
-        _uiState.value = ToDoTasksUIState.Loading
-        try {
-            viewModelScope.launch {
-                toDoRepository.getAllTask.collect {
-                    _uiState.value = ToDoTasksUIState.Success(it)
-                }
-            }
-        } catch (ex: Exception) {
-            _uiState.value = ToDoTasksUIState.Error(ex)
-        }
-    }
-
-    fun searchByText() {
-        _uiState.value = ToDoTasksUIState.Loading
-        try {
-            viewModelScope.launch {
-                toDoRepository.searchTasks(searchTextState.value).collect {
-                    _uiState.value = ToDoTasksUIState.Success(it)
-                }
-            }
-        } catch (ex: Exception) {
-            _uiState.value = ToDoTasksUIState.Error(ex)
-        }
     }
 
     fun deleteAllTask() {
         viewModelScope.launch {
             toDoRepository.deleteAllTasks()
-            _uiState.value = ToDoTasksUIState.Success(emptyList())
         }
     }
 
-    fun changePriority(priority: Priority) {
-        when (priority) {
+    fun selectTask(toDoTaskModel: ToDoTaskModel) {
+        viewModelScope.launch {
+            _taskSelected.value = toDoTaskModel
+        }
+    }
+
+    fun undoDeletedTask() {
+        if (_taskSelected.value.id != ToDoTaskModel.EmptyModel.id) {
+            viewModelScope.launch {
+                toDoRepository.addTask(_taskSelected.value)
+            }
+        }
+    }
+
+    fun changePriority(tasks: List<ToDoTaskModel>, priority: Priority): List<ToDoTaskModel> {
+
+        _sort.value = priority
+        preferences.saveSort(_sort.value)
+
+        return when (priority) {
             Priority.LOW -> {
-                try {
-                    viewModelScope.launch {
-                        toDoRepository.sortByLowPriority.collect {
-                            _uiState.value = ToDoTasksUIState.Success(it)
-                        }
-                    }
-                } catch (ex: Exception) {
-                    _uiState.value = ToDoTasksUIState.Error(ex)
-                }
+                tasks.sortedBy { it.priority }
             }
 
             Priority.HIGH -> {
-                try {
-                    viewModelScope.launch {
-                        toDoRepository.sortByHighPriority.collect {
-                            _uiState.value = ToDoTasksUIState.Success(it)
-                        }
-                    }
-                } catch (ex: Exception) {
-                    _uiState.value = ToDoTasksUIState.Error(ex)
-                }
+                tasks.sortedByDescending { it.priority }
             }
 
             else -> {
-                getAllTask()
+                tasks.sortedBy { it.id }
             }
         }
     }
 
     fun searchTextChange(text: String) {
-        searchTextState.value = text
+        _searchTextState.value = text
     }
 
     fun showSearchBar() {
@@ -125,11 +146,10 @@ class ToDoListViewModel @Inject constructor(
     }
 
     fun closeSearchBar() {
-        if (searchTextState.value.isEmpty()) {
+        if (_searchTextState.value.isEmpty()) {
             _searchAppBarState.value = SearchAppBarState.CLOSED
         } else {
             searchTextChange("")
-            getAllTask()
         }
     }
 
@@ -144,7 +164,7 @@ class ToDoListViewModel @Inject constructor(
             }
 
             Action.DELETE -> {
-                showSnackBar(R.string.successfully_deleted_task_message)
+                showSnackBar(R.string.successfully_deleted_task_message, true)
             }
 
             else -> {
@@ -153,9 +173,9 @@ class ToDoListViewModel @Inject constructor(
         }
     }
 
-    private fun showSnackBar(text: Int) {
+    private fun showSnackBar(text: Int, showUndoAction: Boolean = false) {
         viewModelScope.launch {
-            _uiEvent.send(UiTaskListEvent.ShowSnackbar(UiText.StringResource(text)))
+            _uiEvent.send(UiTaskListEvent.ShowSnackbar(UiText.StringResource(text), showUndoAction))
         }
     }
 }

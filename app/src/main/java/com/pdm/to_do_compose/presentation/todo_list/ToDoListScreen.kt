@@ -9,12 +9,12 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,13 +36,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import com.pdm.to_do_compose.domain.models.Priority
-import com.pdm.to_do_compose.presentation.todo_details.UiTaskEvent
+import com.pdm.to_do_compose.domain.models.ToDoTaskModel
 import com.pdm.to_do_compose.presentation.todo_list.components.DefaultListAppBar
 import com.pdm.to_do_compose.presentation.todo_list.components.EmptyContent
 import com.pdm.to_do_compose.presentation.todo_list.components.ListTasks
 import com.pdm.to_do_compose.presentation.todo_list.components.SearchAppBar
 import com.pdm.to_do_compose.ui.theme.ToDoComposeTheme
 import com.pdm.to_do_compose.util.SearchAppBarState
+import com.pdm.to_do_compose.util.UiText
 import kotlinx.coroutines.launch
 
 @Composable
@@ -50,8 +51,6 @@ fun ToDoListScreen(
     viewModel: ToDoListViewModel = hiltViewModel(), navigateToTask: (Int) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-    val searchAppBarState by viewModel.searchAppBarState
-    val searchTextState by viewModel.searchTextState
 
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -63,9 +62,28 @@ fun ToDoListScreen(
             when (event) {
                 is UiTaskListEvent.ShowSnackbar -> {
                     scope.launch {
-                        snackbarHostState.showSnackbar(
-                            event.value.asString(context)
-                        )
+                        if (event.showUndoAction) {
+                            val result = snackbarHostState.showSnackbar(
+                                event.value.asString(context),
+                                actionLabel = UiText.StringResource(R.string.undo)
+                                    .asString(context),
+                            )
+                            when (result) {
+                                SnackbarResult.ActionPerformed -> {
+                                    viewModel.undoDeletedTask()
+                                }
+
+                                SnackbarResult.Dismissed -> {
+                                    /* Handle snackbar dismissed */
+                                }
+
+                                else -> {}
+                            }
+                        } else {
+                            snackbarHostState.showSnackbar(
+                                event.value.asString(context)
+                            )
+                        }
                         keyboardController?.hide()
                     }
                 }
@@ -74,15 +92,13 @@ fun ToDoListScreen(
     }
 
     ToDoListContent(state,
-        searchAppBarState,
-        searchTextState,
         snackbarHostState,
         { viewModel.showSearchBar() },
-        { viewModel.changePriority(it) },
+        { viewModel.changePriority(state.tasks, it) },
         { viewModel.deleteAllTask() },
         { viewModel.searchTextChange(it) },
         { viewModel.closeSearchBar() },
-        { viewModel.searchByText() }) { taskId ->
+        { viewModel.selectTask(it) }) { taskId ->
         navigateToTask(taskId)
     }
 }
@@ -90,16 +106,14 @@ fun ToDoListScreen(
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ToDoListContent(
-    state: ToDoTasksUIState,
-    searchAppBarState: SearchAppBarState,
-    searchTextState: String,
+    state: TasksUIState,
     snackbarHostState: SnackbarHostState,
     onOpenSearchBarClicked: () -> Unit,
     onPriorityChanged: (Priority) -> Unit,
     onDeleteAllClicked: () -> Unit,
     onTextChange: (String) -> Unit,
     onCloseClicked: () -> Unit,
-    onSearchClicked: () -> Unit,
+    onTaskSelected: (ToDoTaskModel) -> Unit,
     onFabClicked: (Int) -> Unit
 ) {
     val listState = rememberLazyListState()
@@ -118,7 +132,7 @@ fun ToDoListContent(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            if (searchAppBarState == SearchAppBarState.CLOSED) {
+            if (state.appBarState == SearchAppBarState.CLOSED) {
                 DefaultListAppBar({
                     onOpenSearchBarClicked()
                 }, {
@@ -127,10 +141,10 @@ fun ToDoListContent(
                     showAlertMessage.value = true
                 }
             } else {
-                SearchAppBar(text = searchTextState,
+                SearchAppBar(text = state.searchAppBarText,
                     onTextChange = { onTextChange(it) },
-                    onCloseClicked = { onCloseClicked() },
-                    onSearchClicked = { onSearchClicked() })
+                    onCloseClicked = { onCloseClicked() })
+                //onSearchClicked = { onSearchClicked() })
             }
 
         }, floatingActionButton = {
@@ -183,33 +197,29 @@ fun ToDoListContent(
             )
         }
 
-        when (state) {
-            is ToDoTasksUIState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+        if (state.loading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-
-            is ToDoTasksUIState.Success -> {
-                if (state.tasks.isEmpty()) {
-                    EmptyContent()
-                } else {
-                    ListTasks(
-                        tasks = state.tasks,
-                        innerPadding = innerPadding,
-                        listState = listState,
-                        navigateToTaskScreen = onFabClicked
-                    )
-                }
-            }
-
-            else -> {
-
+        } else {
+            if (state.tasks.isEmpty()) {
+                EmptyContent()
+            } else {
+                ListTasks(
+                    tasks = state.tasks,
+                    innerPadding = innerPadding,
+                    listState = listState,
+                    onTaskSelected = {
+                        onTaskSelected(it)
+                        onFabClicked(it.id)
+                    }
+                )
             }
         }
+
 
     }
 }
@@ -218,9 +228,7 @@ fun ToDoListContent(
 @Composable
 private fun ToDoContentPreview() {
     ToDoListContent(
-        ToDoTasksUIState.Success(emptyList()),
-        SearchAppBarState.CLOSED,
-        "",
+        TasksUIState(),
         SnackbarHostState(),
         {},
         {},
@@ -235,9 +243,7 @@ private fun ToDoContentPreview() {
 private fun ToDoContentDarkModePreview() {
     ToDoComposeTheme(darkTheme = true) {
         ToDoListContent(
-            ToDoTasksUIState.Success(emptyList()),
-            SearchAppBarState.CLOSED,
-            "",
+            TasksUIState(),
             SnackbarHostState(),
             {},
             {},

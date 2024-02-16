@@ -31,6 +31,7 @@ import com.pdm.to_do_compose.presentation.todo_details.components.PriorityDropDo
 import com.pdm.to_do_compose.ui.theme.LARGE_PADDING
 import com.pdm.to_do_compose.util.Action
 import com.pdm.to_do_compose.R
+import com.pdm.to_do_compose.domain.models.Priority
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -117,7 +118,7 @@ fun TaskScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = LARGE_PADDING),
-                        priority = uiState.toDoTaskModel!!.priority,
+                        priority = Priority.entries[uiState.toDoTaskModel!!.priority],
                         onPrioritySelected = {
                             viewModel.priorityChange(it)
                         })

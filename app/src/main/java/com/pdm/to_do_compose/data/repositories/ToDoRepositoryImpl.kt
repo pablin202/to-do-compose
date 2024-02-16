@@ -18,10 +18,10 @@ class ToDoRepositoryImpl @Inject constructor(
 ) : ToDoRepository {
     override val getAllTask: Flow<List<ToDoTaskModel>>
         get() = toDoDao.getAllTask().map { entity -> entity.map { it.toModel() } }
-    override val sortByLowPriority: Flow<List<ToDoTaskModel>>
-        get() = toDoDao.selectByLowPriority().map { entity -> entity.map { it.toModel() } }
-    override val sortByHighPriority: Flow<List<ToDoTaskModel>>
-        get() = toDoDao.selectByHighPriority().map { entity -> entity.map { it.toModel() } }
+//    override val sortByLowPriority: Flow<List<ToDoTaskModel>>
+//        get() = toDoDao.selectByLowPriority().map { entity -> entity.map { it.toModel() } }
+//    override val sortByHighPriority: Flow<List<ToDoTaskModel>>
+//        get() = toDoDao.selectByHighPriority().map { entity -> entity.map { it.toModel() } }
 
     override fun getTaskById(taskId: Int): Flow<ToDoTaskModel> = flow {
 

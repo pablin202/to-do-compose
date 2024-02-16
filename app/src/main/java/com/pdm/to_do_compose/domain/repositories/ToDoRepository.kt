@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 interface ToDoRepository {
 
     val getAllTask: Flow<List<ToDoTaskModel>>
-    val sortByLowPriority: Flow<List<ToDoTaskModel>>
-    val sortByHighPriority: Flow<List<ToDoTaskModel>>
+//    val sortByLowPriority: Flow<List<ToDoTaskModel>>
+//    val sortByHighPriority: Flow<List<ToDoTaskModel>>
 
     fun getTaskById(taskId: Int): Flow<ToDoTaskModel>
 

@@ -36,7 +36,7 @@ fun ListTasks(
     tasks: List<ToDoTaskModel> = emptyList(),
     innerPadding: PaddingValues,
     listState: LazyListState,
-    navigateToTaskScreen: (taskId: Int) -> Unit
+    onTaskSelected: (ToDoTaskModel) -> Unit
 ) {
     LazyColumn(
         state = listState,
@@ -48,7 +48,7 @@ fun ListTasks(
         items(items = tasks, key = { it.id }) { task ->
             TaskItem(
                 toDoTaskModel = task,
-                navigateToTaskScreen = navigateToTaskScreen
+                onTaskSelected = onTaskSelected
             )
         }
     }
@@ -57,12 +57,14 @@ fun ListTasks(
 @Composable
 fun TaskItem(
     toDoTaskModel: ToDoTaskModel,
-    navigateToTaskScreen: (taskId: Int) -> Unit
+    onTaskSelected: (ToDoTaskModel) -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RectangleShape,
-        onClick = { navigateToTaskScreen(toDoTaskModel.id) }
+        onClick = {
+            onTaskSelected(toDoTaskModel)
+        }
     ) {
         Column(
             modifier = Modifier
@@ -90,7 +92,7 @@ fun TaskItem(
                                 PRIORITY_INDICATOR_SIZE
                             ),
                         onDraw = {
-                            drawCircle(color = toDoTaskModel.priority.color)
+                            drawCircle(color = Priority.entries[toDoTaskModel.priority].color)
                         }
                     )
                 }
@@ -115,11 +117,10 @@ fun TaskItemPreview() {
             1,
             "Title 1",
             "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. ",
-            Priority.HIGH
-        )
-    ) {
-
-    }
+            Priority.HIGH.ordinal
+        ),
+        {},
+    )
 }
 
 @Preview
@@ -131,10 +132,9 @@ fun TaskItemDarkModePreview() {
                 1,
                 "Title 1",
                 "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. ",
-                Priority.HIGH
-            )
-        ) {
-
-        }
+                Priority.HIGH.ordinal
+            ),
+            {},
+        )
     }
 }

@@ -1,10 +1,14 @@
 package com.pdm.to_do_compose.presentation.todo_list
 
+import com.pdm.to_do_compose.domain.models.Priority
 import com.pdm.to_do_compose.domain.models.ToDoTaskModel
+import com.pdm.to_do_compose.util.SearchAppBarState
 
-sealed class ToDoTasksUIState {
-    data object Idle : ToDoTasksUIState()
-    data object Loading : ToDoTasksUIState()
-    data class Success(val tasks: List<ToDoTaskModel>) : ToDoTasksUIState()
-    data class Error(val error: Throwable) : ToDoTasksUIState()
-}
+data class TasksUIState(
+    val loading: Boolean = false,
+    val tasks: List<ToDoTaskModel> = emptyList(),
+    val sort: Priority = Priority.NONE,
+    val searchAppBarText: String = "",
+    val appBarState: SearchAppBarState = SearchAppBarState.CLOSED,
+    val error: Throwable? = null
+)
