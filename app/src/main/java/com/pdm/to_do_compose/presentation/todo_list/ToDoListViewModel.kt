@@ -1,11 +1,12 @@
 package com.pdm.to_do_compose.presentation.todo_list
 
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
+import androidx.lifecycle.viewmodel.compose.saveable
 import com.pdm.to_do_compose.domain.models.Priority
 import com.pdm.to_do_compose.domain.repositories.ToDoRepository
 import com.pdm.to_do_compose.util.Action
@@ -26,7 +27,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
+@OptIn(SavedStateHandleSaveableApi::class)
 @HiltViewModel
 class ToDoListViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -52,9 +56,6 @@ class ToDoListViewModel @Inject constructor(
 
     private val _uiEvent = Channel<UiTaskListEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
-
-    private val _taskSelected: MutableState<ToDoTaskModel> =
-        mutableStateOf(ToDoTaskModel.EmptyModel)
 
     private val _sortTasks = combine(toDoRepository.getAllTask, _sort) { tasks, sort ->
         changePriority(tasks, sort)
@@ -104,15 +105,15 @@ class ToDoListViewModel @Inject constructor(
     }
 
     fun selectTask(toDoTaskModel: ToDoTaskModel) {
-        viewModelScope.launch {
-            _taskSelected.value = toDoTaskModel
-        }
+        preferences.saveTask(toDoTaskModel)
     }
 
     fun undoDeletedTask() {
-        if (_taskSelected.value.id != ToDoTaskModel.EmptyModel.id) {
+        val task = preferences.getLastTask()
+        if (task.id != ToDoTaskModel.EmptyModel.id) {
             viewModelScope.launch {
-                toDoRepository.addTask(_taskSelected.value)
+                toDoRepository.addTask(task)
+                preferences.saveTask(ToDoTaskModel.EmptyModel)
             }
         }
     }
