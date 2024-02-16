@@ -11,7 +11,7 @@ data class ToDoTaskModel(
             -1,
             "",
             "",
-            Priority.NONE.ordinal
+            Priority.LOW.ordinal
         )
     }
 }
