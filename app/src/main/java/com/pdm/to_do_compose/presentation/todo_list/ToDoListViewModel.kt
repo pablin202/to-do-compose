@@ -1,12 +1,8 @@
 package com.pdm.to_do_compose.presentation.todo_list
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
-import androidx.lifecycle.viewmodel.compose.saveable
 import com.pdm.to_do_compose.domain.models.Priority
 import com.pdm.to_do_compose.domain.repositories.ToDoRepository
 import com.pdm.to_do_compose.util.Action
@@ -27,10 +23,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
-@OptIn(SavedStateHandleSaveableApi::class)
 @HiltViewModel
 class ToDoListViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
