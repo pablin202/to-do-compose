@@ -47,7 +47,7 @@ class ToDoDbTest {
             id = 1,
             title = "Title",
             description = "Description",
-            priority = Priority.HIGH
+            priority = Priority.HIGH.ordinal
         )
 
         toDoDao.addTask(taskOne)
@@ -74,7 +74,7 @@ class ToDoDbTest {
             id = 1,
             title = "Title",
             description = "Description",
-            priority = Priority.HIGH
+            priority = Priority.HIGH.ordinal
         )
 
         toDoDao.addTask(taskOne)
@@ -82,11 +82,10 @@ class ToDoDbTest {
         val latch = CountDownLatch(1)
 
         val job = async(Dispatchers.IO) {
-            toDoDao.getTaskById(1).collect {
-                assertThat(it.id).isEqualTo(1)
-                assertThat(it.id).isNotEqualTo(2)
-                latch.countDown()
-            }
+            val task = toDoDao.getTaskById(1)
+            assertThat(task.id).isEqualTo(1)
+            assertThat(task.id).isNotEqualTo(2)
+            latch.countDown()
         }
 
         withContext(Dispatchers.IO) {
@@ -102,7 +101,7 @@ class ToDoDbTest {
             id = 1,
             title = "Title",
             description = "Description",
-            priority = Priority.HIGH
+            priority = Priority.HIGH.ordinal
         )
 
         toDoDao.addTask(taskOne)
@@ -114,10 +113,9 @@ class ToDoDbTest {
         val latch = CountDownLatch(1)
 
         val job = async(Dispatchers.IO) {
-            toDoDao.getTaskById(1).collect {
-                assertThat(it.title).isEqualTo(taskOne.title)
-                latch.countDown()
-            }
+            val task = toDoDao.getTaskById(1)
+            assertThat(task.title).isEqualTo(taskOne.title)
+            latch.countDown()
         }
 
         withContext(Dispatchers.IO) {
@@ -133,20 +131,20 @@ class ToDoDbTest {
             id = 1,
             title = "Title",
             description = "Description",
-            priority = Priority.HIGH
+            priority = Priority.HIGH.ordinal
         )
 
         toDoDao.addTask(taskOne)
 
-        toDoDao.deleteTask(taskOne)
+        toDoDao.deleteTask(taskOne.id)
 
         val latch = CountDownLatch(1)
 
         val job = async(Dispatchers.IO) {
-            toDoDao.getTaskById(1).collect {
-                assertThat(it).isNull()
-                latch.countDown()
-            }
+            val task = toDoDao.getTaskById(1)
+            assertThat(task).isNull()
+            latch.countDown()
+
         }
 
         withContext(Dispatchers.IO) {
@@ -163,14 +161,14 @@ class ToDoDbTest {
             id = 1,
             title = "Title",
             description = "Description",
-            priority = Priority.HIGH
+            priority = Priority.HIGH.ordinal
         )
 
         val taskTwo = ToDoTaskEntity(
             id = 2,
             title = "Title",
             description = "Description",
-            priority = Priority.HIGH
+            priority = Priority.HIGH.ordinal
         )
 
         toDoDao.addTask(taskOne)
